@@ -22,14 +22,6 @@
   font-size: large;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
 h3 {
   margin-left: 15px;
 }
@@ -41,10 +33,6 @@ h3 {
   padding: 10px;
   margin: 15px;
   cursor: pointer;
-}
-canvas {
-  width: 80%;
-  max-height: 500px;
 }
 .imgPreview {
   text-align: center;

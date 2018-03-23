@@ -1,14 +1,39 @@
 import React, { Component } from "react";
+import { draw } from "./dither";
 import "./App.css";
 
 class App extends Component {
   state = {
     file: "",
-    previewUrl: ""
+    uploadedDataUrl: "",
+    imgPreviewUrl: "",
+    shouldUpdateCanvas: false
+  };
+
+  shouldComponentUpdate = (nextProps, nextState) => {
+    if (this.state.uploadedDataUrl !== nextState.uploadedDataUrl) {
+      return true;
+    }
+    if (this.state.imgPreviewUrl !== nextState.imgPreviewUrl) {
+      return true;
+    }
+    if (this.state.file !== nextState.file) {
+      return true;
+    }
+    return false;
   };
 
   handleDither = e => {
     e.preventDefault();
+    console.log("dithering!");
+    const displayImageData = this.canvas
+      .getContext("2d")
+      .getImageData(0, 0, this.canvas.width, this.canvas.height);
+    draw(displayImageData, 128).then(ditheredImageData => {
+      this.canvas.getContext("2d").putImageData(ditheredImageData, 0, 0);
+      this.setState({ imgPreviewUrl: this.canvas.toDataURL("image/png") });
+      console.log("done!");
+    });
   };
 
   handleImageChange = e => {
@@ -16,29 +41,43 @@ class App extends Component {
 
     let reader = new FileReader();
     let file = e.target.files[0];
+    this.setState({ shouldUpdateCanvas: true });
 
-    reader.onloadend = () => this.setState({ file, previewUrl: reader.result });
+    reader.onloadend = () =>
+      this.setState({ file, uploadedDataUrl: reader.result });
     reader.readAsDataURL(file);
   };
 
-  renderImage = () => {
-    if (this.state.previewUrl) {
+  renderCanvas = () => {
+    if (this.state.uploadedDataUrl && this.state.shouldUpdateCanvas) {
       const img = new Image();
-      img.src = this.state.previewUrl;
+      img.src = this.state.uploadedDataUrl;
       img.onload = () => {
-        const width = img.width;
-        const height = img.height;
-        const aspectRatio = width / height;
-        const canvasWidth = this.canvas.width;
+        this.canvas.width = img.width;
+        this.canvas.height = img.height;
 
-        const argv = [img, 0, 0, canvasWidth, canvasWidth / aspectRatio];
-        this.canvas.getContext("2d").drawImage(...argv);
+        this.canvas.getContext("2d").drawImage(img, 0, 0);
+        const imgPreviewUrl = this.canvas.toDataURL("image/png");
+        this.setState({ imgPreviewUrl, shouldUpdateCanvas: false });
       };
+    }
 
+    return (
+      <canvas
+        style={{ display: "none" }}
+        ref={canvas => (this.canvas = canvas)}
+        src={this.state.uploadedDataUrl}
+      />
+    );
+  };
+
+  renderImage = () => {
+    if (this.state.imgPreviewUrl) {
       return (
-        <canvas
-          ref={canvas => (this.canvas = canvas)}
-          src={this.state.previewUrl}
+        <img
+          alt="preview"
+          style={{ width: "80%", maxHeight: "500px" }}
+          src={this.state.imgPreviewUrl}
         />
       );
     }
@@ -62,10 +101,12 @@ class App extends Component {
           className="submitButton"
           type="submit"
           onClick={e => this.handleDither(e)}
+          disabled={!this.state.uploadedDataUrl}
         >
           Dither Image
         </button>
         <div className="imgPreview">{this.renderImage()}</div>
+        {this.renderCanvas()}
       </div>
     );
   }
