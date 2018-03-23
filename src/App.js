@@ -29,7 +29,7 @@ class App extends Component {
     const displayImageData = this.canvas
       .getContext("2d")
       .getImageData(0, 0, this.canvas.width, this.canvas.height);
-    draw(displayImageData, 128).then(ditheredImageData => {
+    draw(displayImageData, this.canvas.width).then(ditheredImageData => {
       this.canvas.getContext("2d").putImageData(ditheredImageData, 0, 0);
       this.setState({ imgPreviewUrl: this.canvas.toDataURL("image/png") });
       console.log("done!");
@@ -76,7 +76,7 @@ class App extends Component {
       return (
         <img
           alt="preview"
-          style={{ width: "80%", maxHeight: "500px" }}
+          className="imgPreview"
           src={this.state.imgPreviewUrl}
         />
       );
@@ -91,6 +91,7 @@ class App extends Component {
       <div className="App">
         <header className="App-header">
           <h1 className="App-title">Welcome to Dither Domain</h1>
+          <p>Upload an image to dither it! (uses Atkinson method)</p>
         </header>
         <input
           className="fileInput"
@@ -105,7 +106,7 @@ class App extends Component {
         >
           Dither Image
         </button>
-        <div className="imgPreview">{this.renderImage()}</div>
+        {this.renderImage()}
         {this.renderCanvas()}
       </div>
     );
